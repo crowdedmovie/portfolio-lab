@@ -22,7 +22,7 @@
 <div class="field"><label for="deposit">Versement au début de chaque mois</label><div class="entry"><input id="deposit" type="number" value="500" step="100"><span>€</span></div></div>
 <p class="hint">Les versements transitent par les liquidités puis le modèle rééquilibre mensuellement les trois poches aux proportions cibles.</p>
 </section>
-<section class="card"><h2>03 · Moyen terme</h2>
+<section class="card"><h2>Fiscalité des gains tactiques</h2><div class="field"><label for="taxRate">Flat tax simulée sur bénéfices tactiques annuels</label><div class="entry"><input id="taxRate" type="number" value="31.4" min="0" max="100" step=".1"><span>%</span></div></div><p class="hint">Prélèvement simulé à la fin des mois 12, 24, 36, etc., uniquement si le résultat tactique net de l'année est positif. Le rendement moyen terme n'est pas taxé dans ce scénario. Taux de référence français 2026 : 31,4 % (impots.gouv.fr). Modèle simplifié, distinct de la déclaration et des dates réelles d'exigibilité.</p></section><section class="card"><h2>03 · Moyen terme</h2>
 <div class="field"><label for="mtReturn">Rendement annuel attendu sur la poche moyen terme</label><div class="entry"><input id="mtReturn" type="number" value="8" step=".5"><span>%</span></div></div>
 <p class="hint">Le rendement annuel est converti en un taux mensuel équivalent : (1 + r annuel)^(1/12) − 1.</p>
 </section>
@@ -46,19 +46,19 @@
 <div id="errors" class="alert" role="alert" hidden></div>
 <div id="results">
 <section class="card"><h2>06 · Évolution mensuelle du patrimoine</h2>
-<div class="metrics"><div class="metric"><small>Patrimoine final</small><strong id="final"></strong></div><div class="metric"><small>Capital apporté</small><strong id="contributions"></strong></div><div class="metric"><small>Gain ou perte simulé(e)</small><strong id="profit"></strong></div></div>
-<div class="legend" style="margin:20px 0 9px"><span><i class="swatch" style="background:#648efe"></i>Patrimoine simulé</span><span><i class="swatch" style="background:#e9ae54"></i>Capital apporté (capital initial + dépôts)</span></div>
+<div class="metrics"><div class="metric"><small>Patrimoine après flat tax</small><strong id="afterTaxFinal"></strong></div><div class="metric"><small>Flat tax cumulée</small><strong id="totalTax"></strong></div><div class="metric"><small>Patrimoine final</small><strong id="final"></strong></div><div class="metric"><small>Capital apporté</small><strong id="contributions"></strong></div><div class="metric"><small>Gain ou perte simulé(e)</small><strong id="profit"></strong></div></div>
+<div class="legend" style="margin:20px 0 9px"><span><i class="swatch" style="background:#648efe"></i>Patrimoine brut (sans impôt)</span><span><i class="swatch" style="background:#db7dce"></i>Patrimoine après flat tax</span><span><i class="swatch" style="background:#e9ae54"></i>Capital apporté (capital initial + dépôts)</span></div>
 <svg id="chart" viewBox="0 0 800 340" role="img" aria-label="Évolution mensuelle du patrimoine et des apports"></svg>
-<div class="row"><span>Versements cumulés</span><b id="deposits"></b></div><div class="row"><span>Contribution mensuelle attendue du portefeuille</span><b id="monthly"></b></div><div class="row"><span>Contribution annuelle moyen terme, au capital initial (sans composition)</span><b id="mtYear"></b></div><div class="row"><span>Contribution annuelle tactique, au capital initial (sans composition)</span><b id="ctYear"></b></div>
+<div class="row"><span>Gains après flat tax vs capital apporté</span><b id="afterTaxProfit"></b></div><div class="row"><span>Versements cumulés</span><b id="deposits"></b></div><div class="row"><span>Contribution mensuelle attendue du portefeuille</span><b id="monthly"></b></div><div class="row"><span>Contribution annuelle moyen terme, au capital initial (sans composition)</span><b id="mtYear"></b></div><div class="row"><span>Contribution annuelle tactique, au capital initial (sans composition)</span><b id="ctYear"></b></div>
 </section>
 <section class="card"><h2>07 · Scénarios de risque</h2><div class="row"><span>Plafond de perte simultanée, sur capital initial</span><b id="openRisk"></b></div><div class="row"><span>10 pertes successives, risque initial fixe</span><b id="streak"></b></div><div class="row"><span>Tous les trades de la période perdants, addition arithmétique non capitalisée</span><b id="stress"></b></div><p class="hint">Le risque ouvert ne borne pas les pertes cumulées. Les scénarios de stress ne sont pas des pertes maximales garanties. Des pertes supérieures au capital investi, de l'effet de levier et des écarts de stop sont possibles selon les instruments.</p></section>
 <section class="card"><h2>08 · Sensibilité au taux de réussite</h2><p class="hint">Rendement tactique mensuel théorique en fonction du win rate, à paramètres de risque et volume de trades constants.</p><table><thead><tr><th>Win rate</th><th>Espérance sur poche tactique</th><th>Contribution globale</th></tr></thead><tbody id="sensitivity"></tbody></table></section>
 </div>
-<footer>Modèle pédagogique, sans frais, impôts, glissement, ni contraintes de marge. La courbe suppose les objectifs de rendement atteints exactement chaque mois et un rééquilibrage au début de chaque mois. Elle utilise les rendements mensuels composés (les rendements réels sont variables). Les apports du mois 1 sont versés avant le premier calcul de performance.</footer>
+<footer>Modèle pédagogique, sans frais, impôts, glissement, ni contraintes de marge. La courbe suppose les objectifs de rendement atteints exactement chaque mois et un rééquilibrage au début de chaque mois. Elle utilise les rendements mensuels composés (les rendements réels sont variables). Les apports du mois 1 sont versés avant le premier calcul de performance. Une flat tax paramétrable est déduite uniquement sur la trajectoire après impôt au terme de chaque bloc complet de 12 mois, sur les gains tactiques nets positifs de cette année de simulation ; aucune taxe provisionnelle n’est prélevée pour une année incomplète. Aucun report des pertes fiscales entre années ni traitement fiscal du moyen terme.</footer>
 </main>
 <script>
 'use strict';
-const defaults={capital:100000,mt:65,ct:25,months:60,deposit:500,mtReturn:8,risk:.4,open:2,rr:2,trades:20,target:3};
+const defaults={capital:100000,mt:65,ct:25,months:60,deposit:500,mtReturn:8,risk:.4,open:2,rr:2,trades:20,target:3,taxRate:31.4};
 const $=id=>document.getElementById(id);
 const v=id=>Number($(id).value);
 const number=(n,d=1)=>Number.isFinite(n)?new Intl.NumberFormat('fr-FR',{maximumFractionDigits:d,minimumFractionDigits:d}).format(n):'—';
@@ -69,17 +69,17 @@ function svgElement(name,attrs,text){const e=document.createElementNS('http://ww
 function drawChart(points,months){
 const svg=$('chart');svg.replaceChildren();
 const W=800,H=340,left=90,right=20,top=18,bottom=43;
-const all=points.flatMap(p=>[p.wealth,p.contributed]);let low=Math.min(0,...all),high=Math.max(...all);const margin=Math.max(1,(high-low)*.06);low-=margin;high+=margin;
+const all=points.flatMap(p=>[p.wealth,p.afterTax,p.contributed]);let low=Math.min(0,...all),high=Math.max(...all);const margin=Math.max(1,(high-low)*.06);low-=margin;high+=margin;
 const x=m=>left+(W-left-right)*m/months,y=n=>H-bottom-(H-top-bottom)*(n-low)/(high-low);
 for(let i=0;i<=4;i++){const val=low+(high-low)*i/4,cy=y(val);svgElement('line',{x1:left,y1:cy,x2:W-right,y2:cy,stroke:'#33465f'});svgElement('text',{x:left-8,y:cy+4,'text-anchor':'end',fill:'#b1bfd2','font-size':12},number(val/1000,0)+' k€')}
 for(let i=0;i<=5;i++){const m=Math.round(months*i/5);svgElement('text',{x:x(m),y:H-10,'text-anchor':'middle',fill:'#b1bfd2','font-size':12},'M'+m)}
-for(const [key,color] of [['contributed','#e9ae54'],['wealth','#648efe']]){const path=points.map((p,i)=>(i?'L':'M')+x(p.month).toFixed(2)+','+y(p[key]).toFixed(2)).join(' ');svgElement('path',{d:path,fill:'none',stroke:color,'stroke-width':3,'stroke-linejoin':'round'});svgElement('circle',{cx:x(months),cy:y(points[points.length-1][key]),r:4,fill:color})}
+for(const [key,color] of [['contributed','#e9ae54'],['wealth','#648efe'],['afterTax','#db7dce']]){const path=points.map((p,i)=>(i?'L':'M')+x(p.month).toFixed(2)+','+y(p[key]).toFixed(2)).join(' ');svgElement('path',{d:path,fill:'none',stroke:color,'stroke-width':3,'stroke-linejoin':'round'});svgElement('circle',{cx:x(months),cy:y(points[points.length-1][key]),r:4,fill:color})}
 }
 function update(){
-const C=v('capital'),A=v('mt'),T=v('ct'),L=100-A-T,M=v('months'),D=v('deposit'),Y=v('mtReturn'),R=v('risk'),O=v('open'),B=v('rr'),N=v('trades'),G=v('target');
+const C=v('capital'),A=v('mt'),T=v('ct'),L=100-A-T,M=v('months'),D=v('deposit'),Y=v('mtReturn'),R=v('risk'),O=v('open'),B=v('rr'),N=v('trades'),G=v('target'),taxRate=v('taxRate');
 $('cash').value=number(L,2);
 const messages=[];
-if(![C,A,T,L,M,D,Y,R,O,B,N,G].every(Number.isFinite)||C<=0||A<0||T<0||L<0||M<1||M>600||!Number.isInteger(M)||D<0||Y< -100||R<=0||O<0||B<=0||N<1||!Number.isInteger(N)||G<0){messages.push('Paramètres invalides : vérifie le capital, les allocations (somme ≤ 100 %), une durée entière de 1 à 600 mois, le versement ≥ 0, le rendement MT ≥ −100 %, le risque et le ratio > 0 et le nombre entier de trades.')}
+if(![C,A,T,L,M,D,Y,R,O,B,N,G,taxRate].every(Number.isFinite)||C<=0||A<0||T<0||L<0||M<1||M>600||!Number.isInteger(M)||D<0||Y< -100||R<=0||O<0||B<=0||N<1||!Number.isInteger(N)||G<0||taxRate<0||taxRate>100){messages.push('Paramètres invalides : vérifie le capital, les allocations (somme ≤ 100 %), une durée entière de 1 à 600 mois, le versement ≥ 0, le rendement MT ≥ −100 %, le risque et le ratio > 0 et le nombre entier de trades.')}
 if(messages.length){$('errors').hidden=false;set('errors',messages.join(' '));$('results').hidden=true;return}
 $('bmt').style.width=A+'%';$('bct').style.width=T+'%';$('bca').style.width=L+'%';
 set('allocation-detail','Moyen terme '+eur(C*A/100)+' · Tactique '+eur(C*T/100)+' · Liquidités '+eur(C*L/100));
@@ -98,12 +98,28 @@ if(T===0&&G>0)messages.push('La poche tactique est vide.');
 if(O>T)messages.push('Le risque ouvert maximal dépasse l’allocation tactique.');
 if(R>T&&T>0)messages.push('Le risque d’un seul trade dépasse la taille de la poche tactique.');
 const mtMonthly=Math.pow(1+Y/100,1/12)-1;
-const monthly=A/100*mtMonthly+T/100*G/100;
+const tacticalMonthly=T/100*G/100;
+const monthly=A/100*mtMonthly+tacticalMonthly;
 if(monthly<=-1)messages.push('Le rendement combiné mensuel entraîne une perte d’au moins 100 % dans le modèle.');
 $('errors').hidden=messages.length===0;if(messages.length)set('errors',messages.join(' '));
-let wealth=C,contributed=C;const points=[{month:0,wealth,contributed}];
-for(let month=1;month<=M;month++){contributed+=D;wealth=(wealth+D)*(1+monthly);points.push({month,wealth,contributed})}
+let wealth=C,afterTax=C,contributed=C,totalTax=0,yearTacticalNet=0;
+const points=[{month:0,wealth,afterTax,contributed}];
+for(let month=1;month<=M;month++){
+  contributed+=D;
+  wealth=(wealth+D)*(1+monthly);
+  const invested=afterTax+D;
+  // After-tax path compounds on its own capital: the prior taxes reduce future returns.
+  const tacticalGain=invested*tacticalMonthly;
+  afterTax=invested*(1+monthly);
+  yearTacticalNet+=tacticalGain;
+  if(month%12===0){
+    const tax=Math.min(Math.max(0,afterTax),Math.max(0,yearTacticalNet)*taxRate/100);
+    afterTax-=tax; totalTax+=tax; yearTacticalNet=0;
+  }
+  points.push({month,wealth,afterTax,contributed});
+}
 $('results').hidden=false;
+set('afterTaxFinal',eur(afterTax));set('totalTax',eur(totalTax));set('afterTaxProfit',(afterTax-contributed>=0?'+':'')+eur(afterTax-contributed));
 set('final',eur(wealth));set('contributions',eur(contributed));set('profit',(wealth-contributed>=0?'+':'')+eur(wealth-contributed));
 set('deposits',eur(M*D));set('monthly',percent(monthly*100));set('mtYear',percent(A*Y/100));set('ctYear',percent(12*global));
 set('openRisk','−'+eur(C*O/100));set('streak','−'+percent(10*R).replace('+',''));set('stress','−'+number(M*N*R,2)+' % du capital initial (théorique)');
