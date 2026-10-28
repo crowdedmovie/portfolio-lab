@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PortfolioLab — Simulateur de portefeuille</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#e9eefb;background:#101826;font-variant-numeric:tabular-nums}*{box-sizing:border-box}body{margin:0}main{max-width:1050px;margin:auto;padding:28px 18px 50px}h1{margin:0 0 5px;font-size:30px}h2{font-size:16px;margin:0 0 14px}.sub,.hint{color:#aebbd0}.sub{margin:0 0 22px}.hint{font-size:12px;line-height:1.6}.layout{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:#192639;border:1px solid #30435d;border-radius:14px;padding:18px;margin-bottom:16px}.field{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0}.field label{font-size:13px;max-width:67%;line-height:1.45}.entry{display:flex;align-items:center;border:1px solid #47607d;background:#0e192a;border-radius:8px;padding:0 8px;width:144px;flex-shrink:0}.entry input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#fff;font-size:14px;text-align:right;padding:9px 3px}.entry span{font-size:12px;color:#aebbd0;margin-left:4px}.entry input[readonly]{color:#aebbd0}.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.metric{background:#102036;border-radius:10px;padding:13px}.metric small{display:block;color:#b2c0d3;font-size:12px}.metric strong{display:block;font-size:22px;margin:6px 0;overflow-wrap:anywhere}.row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #30435d;font-size:13px}.row:last-child{border-bottom:0}.row b{text-align:right}.segments{display:flex;height:18px;border-radius:6px;overflow:hidden;background:#344354;margin:14px 0 7px}.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:#bac7d8}.swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}.alert{padding:12px;border:1px solid #dc8f65;border-radius:9px;background:#37271f;margin-bottom:16px;font-size:13px;line-height:1.6}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}button{background:#2c65b1;color:#fff;border:0;border-radius:8px;padding:9px 13px;cursor:pointer}button:hover{background:#3979d0}svg{width:100%;height:auto;display:block}.positive{color:#7bd4a0}.negative{color:#f39c87}footer{font-size:12px;line-height:1.7;color:#aebbd0}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:8px;border-bottom:1px solid #30435d;text-align:right}th:first-child,td:first-child{text-align:left}@media(max-width:700px){.layout{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:14px}.field label{max-width:60%}.entry{width:125px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<main>
+<header class="controls" style="justify-content:space-between;margin-bottom:22px"><div><h1>PortfolioLab</h1><p class="sub">Allocation, risque et projection patrimoniale</p></div><button id="reset" type="button">Réinitialiser</button></header>
+<section class="card"><h2>01 · Portefeuille initial</h2>
+<div class="field"><label for="capital">Capital total</label><div class="entry"><input id="capital" type="number" value="100000" step="1000"><span>€</span></div></div>
+<div class="field"><label for="mt">Allocation moyen terme</label><div class="entry"><input id="mt" type="number" value="65" step="1"><span>%</span></div></div>
+<div class="field"><label for="ct">Allocation trading tactique</label><div class="entry"><input id="ct" type="number" value="25" step="1"><span>%</span></div></div>
+<div class="field"><label for="cash">Liquidités résiduelles (calculées)</label><div class="entry"><input id="cash" readonly><span>%</span></div></div>
+<div class="segments"><div id="bmt" style="background:#45bd95;width:65%"></div><div id="bct" style="background:#658ff3;width:25%"></div><div id="bca" style="background:#e9ae54;width:10%"></div></div><div id="allocation-detail" class="legend"></div></section>
+<div class="layout">
+<section class="card"><h2>02 · Horizon et versements</h2>
+<div class="field"><label for="months">Durée totale de la simulation</label><div class="entry"><input id="months" type="number" value="60" step="1"><span>mois</span></div></div>
+<div class="field"><label for="deposit">Versement au début de chaque mois</label><div class="entry"><input id="deposit" type="number" value="500" step="100"><span>€</span></div></div>
+<p class="hint">Les versements transitent par les liquidités puis le modèle rééquilibre mensuellement les trois poches aux proportions cibles.</p>
+</section>
+<section class="card"><h2>03 · Moyen terme</h2>
+<div class="field"><label for="mtReturn">Rendement annuel attendu sur la poche moyen terme</label><div class="entry"><input id="mtReturn" type="number" value="8" step=".5"><span>%</span></div></div>
+<p class="hint">Le rendement annuel est converti en un taux mensuel équivalent : (1 + r annuel)^(1/12) − 1.</p>
+</section>
+<section class="card"><h2>04 · Trading tactique</h2>
+<div class="field"><label for="risk">Risque par trade (% portefeuille global)</label><div class="entry"><input id="risk" type="number" value=".4" step=".05"><span>%</span></div></div>
+<div class="field"><label for="open">Plafond simultané (% portefeuille global)</label><div class="entry"><input id="open" type="number" value="2" step=".25"><span>%</span></div></div>
+<div class="field"><label for="rr">Risk / Reward (gain pour 1R perdu)</label><div class="entry"><input id="rr" type="number" value="2" step=".25"><span>R</span></div></div>
+<div class="field"><label for="trades">Total des trades par mois</label><div class="entry"><input id="trades" type="number" value="20" step="1"><span>trades</span></div></div>
+<div class="field"><label for="target">Objectif mensuel (% poche tactique)</label><div class="entry"><input id="target" type="number" value="3" step=".25"><span>%</span></div></div>
+</section>
+<section class="card"><h2>05 · Faisabilité tactique</h2>
+<div class="metrics"><div class="metric"><small>Win rate d'équilibre</small><strong id="breakEven"></strong></div><div class="metric"><small>Win rate nécessaire</small><strong id="required"></strong></div><div class="metric"><small>Trades gagnants</small><strong id="wins"></strong></div></div>
+<div class="row"><span>Perte d'un trade (1R)</span><b id="oneR"></b></div>
+<div class="row"><span>Gain d'un trade gagnant</span><b id="winAmount"></b></div>
+<div class="row"><span>Contribution tactique mensuelle (% du portefeuille global)</span><b id="globalTarget"></b></div>
+<div class="row"><span>Rendement tactique réalisé avec des trades entiers</span><b id="realized"></b></div>
+<div class="row"><span>Positions simultanées au risque maximal</span><b id="slots"></b></div>
+<p class="hint">Le nombre de gagnants est calculé en supposant que tous les autres trades perdent exactement 1R, sans frais ni slippage.</p>
+</section>
+</div>
+<div id="errors" class="alert" role="alert" hidden></div>
+<div id="results">
+<section class="card"><h2>06 · Évolution mensuelle du patrimoine</h2>
+<div class="metrics"><div class="metric"><small>Patrimoine final</small><strong id="final"></strong></div><div class="metric"><small>Capital apporté</small><strong id="contributions"></strong></div><div class="metric"><small>Gain ou perte simulé(e)</small><strong id="profit"></strong></div></div>
+<div class="legend" style="margin:20px 0 9px"><span><i class="swatch" style="background:#648efe"></i>Patrimoine simulé</span><span><i class="swatch" style="background:#e9ae54"></i>Capital apporté (capital initial + dépôts)</span></div>
+<svg id="chart" viewBox="0 0 800 340" role="img" aria-label="Évolution mensuelle du patrimoine et des apports"></svg>
+<div class="row"><span>Versements cumulés</span><b id="deposits"></b></div><div class="row"><span>Contribution mensuelle attendue du portefeuille</span><b id="monthly"></b></div><div class="row"><span>Contribution annuelle moyen terme, au capital initial (sans composition)</span><b id="mtYear"></b></div><div class="row"><span>Contribution annuelle tactique, au capital initial (sans composition)</span><b id="ctYear"></b></div>
+</section>
+<section class="card"><h2>07 · Scénarios de risque</h2><div class="row"><span>Plafond de perte simultanée, sur capital initial</span><b id="openRisk"></b></div><div class="row"><span>10 pertes successives, risque initial fixe</span><b id="streak"></b></div><div class="row"><span>Tous les trades de la période perdants, addition arithmétique non capitalisée</span><b id="stress"></b></div><p class="hint">Le risque ouvert ne borne pas les pertes cumulées. Les scénarios de stress ne sont pas des pertes maximales garanties. Des pertes supérieures au capital investi, de l'effet de levier et des écarts de stop sont possibles selon les instruments.</p></section>
+<section class="card"><h2>08 · Sensibilité au taux de réussite</h2><p class="hint">Rendement tactique mensuel théorique en fonction du win rate, à paramètres de risque et volume de trades constants.</p><table><thead><tr><th>Win rate</th><th>Espérance sur poche tactique</th><th>Contribution globale</th></tr></thead><tbody id="sensitivity"></tbody></table></section>
+</div>
+<footer>Modèle pédagogique, sans frais, impôts, glissement, ni contraintes de marge. La courbe suppose les objectifs de rendement atteints exactement chaque mois et un rééquilibrage au début de chaque mois. Elle utilise les rendements mensuels composés (les rendements réels sont variables). Les apports du mois 1 sont versés avant le premier calcul de performance.</footer>
+</main>
+<script>
+'use strict';
+const defaults={capital:100000,mt:65,ct:25,months:60,deposit:500,mtReturn:8,risk:.4,open:2,rr:2,trades:20,target:3};
+const $=id=>document.getElementById(id);
+const v=id=>Number($(id).value);
+const number=(n,d=1)=>Number.isFinite(n)?new Intl.NumberFormat('fr-FR',{maximumFractionDigits:d,minimumFractionDigits:d}).format(n):'—';
+const eur=n=>number(n,0)+' €';
+const percent=n=>(n>0?'+':'')+number(n,2)+' %';
+const set=(id,value)=>{$(id).textContent=value};
+function svgElement(name,attrs,text){const e=document.createElementNS('http://www.w3.org/2000/svg',name);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;$('chart').appendChild(e);return e}
+function drawChart(points,months){
+const svg=$('chart');svg.replaceChildren();
+const W=800,H=340,left=90,right=20,top=18,bottom=43;
+const all=points.flatMap(p=>[p.wealth,p.contributed]);let low=Math.min(0,...all),high=Math.max(...all);const margin=Math.max(1,(high-low)*.06);low-=margin;high+=margin;
+const x=m=>left+(W-left-right)*m/months,y=n=>H-bottom-(H-top-bottom)*(n-low)/(high-low);
+for(let i=0;i<=4;i++){const val=low+(high-low)*i/4,cy=y(val);svgElement('line',{x1:left,y1:cy,x2:W-right,y2:cy,stroke:'#33465f'});svgElement('text',{x:left-8,y:cy+4,'text-anchor':'end',fill:'#b1bfd2','font-size':12},number(val/1000,0)+' k€')}
+for(let i=0;i<=5;i++){const m=Math.round(months*i/5);svgElement('text',{x:x(m),y:H-10,'text-anchor':'middle',fill:'#b1bfd2','font-size':12},'M'+m)}
+for(const [key,color] of [['contributed','#e9ae54'],['wealth','#648efe']]){const path=points.map((p,i)=>(i?'L':'M')+x(p.month).toFixed(2)+','+y(p[key]).toFixed(2)).join(' ');svgElement('path',{d:path,fill:'none',stroke:color,'stroke-width':3,'stroke-linejoin':'round'});svgElement('circle',{cx:x(months),cy:y(points[points.length-1][key]),r:4,fill:color})}
+}
+function update(){
+const C=v('capital'),A=v('mt'),T=v('ct'),L=100-A-T,M=v('months'),D=v('deposit'),Y=v('mtReturn'),R=v('risk'),O=v('open'),B=v('rr'),N=v('trades'),G=v('target');
+$('cash').value=number(L,2);
+const messages=[];
+if(![C,A,T,L,M,D,Y,R,O,B,N,G].every(Number.isFinite)||C<=0||A<0||T<0||L<0||M<1||M>600||!Number.isInteger(M)||D<0||Y< -100||R<=0||O<0||B<=0||N<1||!Number.isInteger(N)||G<0){messages.push('Paramètres invalides : vérifie le capital, les allocations (somme ≤ 100 %), une durée entière de 1 à 600 mois, le versement ≥ 0, le rendement MT ≥ −100 %, le risque et le ratio > 0 et le nombre entier de trades.')}
+if(messages.length){$('errors').hidden=false;set('errors',messages.join(' '));$('results').hidden=true;return}
+$('bmt').style.width=A+'%';$('bct').style.width=T+'%';$('bca').style.width=L+'%';
+set('allocation-detail','Moyen terme '+eur(C*A/100)+' · Tactique '+eur(C*T/100)+' · Liquidités '+eur(C*L/100));
+const global=T*G/100;
+const winRaw=(global/R+N)/(B+1),wins=Math.max(0,Math.ceil(winRaw-1e-10));
+const feasible=T>0&&O>=R&&wins<=N;
+set('breakEven',number(100/(1+B),1)+' %');
+set('required',feasible?number(100*wins/N,1)+' %':'Impossible');
+set('wins',feasible?wins+' / '+N:'—');
+set('oneR',eur(C*R/100));set('winAmount',eur(C*R*B/100));set('globalTarget',percent(global));
+set('realized',feasible?percent(100*R*(wins*B-(N-wins))/T):'Impossible');
+set('slots',number(Math.floor(O/R),0));
+if(O<R)messages.push('Le plafond simultané est inférieur au risque d’un seul trade.');
+if(wins>N)messages.push('L’objectif tactique est inaccessible avec le nombre de trades prévu, même avec 100 % de gagnants.');
+if(T===0&&G>0)messages.push('La poche tactique est vide.');
+if(O>T)messages.push('Le risque ouvert maximal dépasse l’allocation tactique.');
+if(R>T&&T>0)messages.push('Le risque d’un seul trade dépasse la taille de la poche tactique.');
+const mtMonthly=Math.pow(1+Y/100,1/12)-1;
+const monthly=A/100*mtMonthly+T/100*G/100;
+if(monthly<=-1)messages.push('Le rendement combiné mensuel entraîne une perte d’au moins 100 % dans le modèle.');
+$('errors').hidden=messages.length===0;if(messages.length)set('errors',messages.join(' '));
+let wealth=C,contributed=C;const points=[{month:0,wealth,contributed}];
+for(let month=1;month<=M;month++){contributed+=D;wealth=(wealth+D)*(1+monthly);points.push({month,wealth,contributed})}
+$('results').hidden=false;
+set('final',eur(wealth));set('contributions',eur(contributed));set('profit',(wealth-contributed>=0?'+':'')+eur(wealth-contributed));
+set('deposits',eur(M*D));set('monthly',percent(monthly*100));set('mtYear',percent(A*Y/100));set('ctYear',percent(12*global));
+set('openRisk','−'+eur(C*O/100));set('streak','−'+percent(10*R).replace('+',''));set('stress','−'+number(M*N*R,2)+' % du capital initial (théorique)');
+drawChart(points,M);
+const tbody=$('sensitivity');tbody.replaceChildren();
+const rates=[0,20,30,100/(1+B),40,50,60,70,80,100].sort((a,b)=>a-b).filter((p,i,arr)=>i===0||Math.abs(p-arr[i-1])>.25);
+for(const p of rates){const contribution=N*R*((p/100)*(B+1)-1);const tr=document.createElement('tr');for(const value of [number(p,1)+' %',T>0?percent(100*contribution/T):'—',percent(contribution)]){const td=document.createElement('td');td.textContent=value;tr.appendChild(td)}tbody.appendChild(tr)}
+}
+document.querySelectorAll('input:not([readonly])').forEach(input=>input.addEventListener('input',update));
+$('reset').addEventListener('click',()=>{for(const [key,val] of Object.entries(defaults))$(key).value=val;update()});
+update();
+</script>
+</body></html>
